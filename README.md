@@ -1,16 +1,12 @@
 # qr_scanner
 
-A new Flutter project.
+flutter app that is able to scan qr codes and update google sheets with the data
 
 ## Getting Started
+1. download packages: `flutter pub get`
 
-This project is a starting point for a Flutter application.
+2. to run the app: `flutter run -v`
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+3. choose device: 
+    * you can choose an emulator to test the app
+    * you can also connect your phone with usb cable and enable usb debugging to run the app on your phone (i recommend this option)

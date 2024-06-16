@@ -1,9 +1,13 @@
 // Author: Ahmad Shamsddin
 
 import 'package:flutter/material.dart';
+import 'package:qr_scanner/connecting-flutter-gsheet.dart';
 import 'qr_scanner.dart';
+import 'package:flutter/services.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await NameSheet.init();
   runApp(const MyApp());
 }
 

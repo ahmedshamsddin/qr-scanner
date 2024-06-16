@@ -1,7 +1,6 @@
-// Author: Ahmad Shamsddin
-
 import "package:flutter/material.dart";
 import "package:mobile_scanner/mobile_scanner.dart";
+import 'package:qr_scanner/connecting-flutter-gsheet.dart'; // Import the correct path
 
 class QRCodeReader extends StatefulWidget {
   const QRCodeReader({super.key, required this.isRegistrationMode});
@@ -34,7 +33,7 @@ class _QRCodeReaderState extends State<QRCodeReader> {
     setState(() {});
   }
 
-  void _onDetect(BarcodeCapture capture) {
+  void _onDetect(BarcodeCapture capture) async {
     if (!_hasDetected) {
       final barcode = capture.barcodes.first;
 
@@ -42,16 +41,47 @@ class _QRCodeReaderState extends State<QRCodeReader> {
         _hasDetected = true;
       });
 
-      _controller.stop();
+      await NameSheet.init(); // Initialize Google Sheets connection
+      _controller.stop(); // Stop scanning
 
-      // update google sheet depending on the mode
-      // if (widget.isRegistrationMode.value) {
-      //   // update attended column
-      // } else {
-      //   // update points column
-      // }
+      // Extract id and name from the scanned value
+      String rawValue = barcode.rawValue ?? "";
+      List<String> parts = rawValue.split('-');
 
-      showDialog(
+      if (parts.length == 2) {
+        String idStr = parts[0];
+        int id = int.tryParse(idStr) ?? 0;
+        // String name = parts[1]; // Not used in current logic
+
+        // Check mode and update the Google Sheet
+        if (widget.isRegistrationMode.value) {
+          // Update "attended" column to "TRUE"
+          await NameSheet.userSheet!.values.insertValue(
+            'TRUE', // Value to insert
+            column: 4, // Column to update
+            row: id, // Row key (id)
+          );
+        } else {
+          // Fetch current points
+          var currentPointsStr = await NameSheet.userSheet!.values.value(
+            column: 2,
+            row: id,
+          );
+
+          // Convert current points to integer and increment
+          var currentPoints = int.tryParse(currentPointsStr ?? '0') ?? 0;
+          var newPoints = currentPoints + 1;
+
+          // Update "no of points" column
+          await NameSheet.userSheet!.values.insertValue(
+            newPoints.toString(), // New value for points
+            column: 2, // Column to update
+            row: id, // Row key (id)
+          );
+        }
+      } 
+        // Handle invalid QR code format
+        showDialog(
         context: context,
         builder: (context) => AlertDialog(
           title: Text(
@@ -65,9 +95,10 @@ class _QRCodeReaderState extends State<QRCodeReader> {
               },
               child: const Text("OK"),
             ),
-          ],
-        ),
-      );
+            ],
+          ),
+        );
+      
     }
   }
 
@@ -78,7 +109,7 @@ class _QRCodeReaderState extends State<QRCodeReader> {
     _controller.start();
   }
 
-  @override
+   @override
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(32),

@@ -1,4 +1,5 @@
 import 'package:gsheets/gsheets.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class NameSheet {
   static const _credentials = r'''
@@ -15,9 +16,9 @@ class NameSheet {
   "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/qr-677%40qr-project-426521.iam.gserviceaccount.com",
   "universe_domain": "googleapis.com"
 }
-''';
-  // add the creditentials here
-  static final _spreadsheetId = '1COpIK5dt-p_Emrumuj1NfJy1QFTrqnoGMR6M07HlOMk';
+
+  '''; // add the creditentials here
+  static const _spreadsheetId = '1COpIK5dt-p_Emrumuj1NfJy1QFTrqnoGMR6M07HlOMk';
   static final _gsheet = GSheets(_credentials);
   static Worksheet? userSheet;
 

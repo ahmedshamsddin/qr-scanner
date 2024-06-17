@@ -14,7 +14,7 @@ class QRCodeReader extends StatefulWidget {
 class _QRCodeReaderState extends State<QRCodeReader> {
   late MobileScannerController _controller;
   bool _hasDetected = false;
-
+  TextEditingController _passwordController = TextEditingController();
   @override
   void initState() {
     super.initState();
@@ -53,6 +53,17 @@ class _QRCodeReaderState extends State<QRCodeReader> {
         int id = int.tryParse(idStr) ?? 0;
         // String name = parts[1]; // Not used in current logic
 
+        if (!widget.isRegistrationMode.value) {
+          // Prompt for password
+          bool passwordCorrect = await _promptPassword();
+
+          if (!passwordCorrect) {
+            _showErrorDialog("Incorrect password");
+            // Password incorrect, reset detection
+            _resetDetection();
+            return;
+          }
+        }
         // Check mode and update the Google Sheet
         if (widget.isRegistrationMode.value) {
           // Update "attended" column to "TRUE"
@@ -106,6 +117,90 @@ class _QRCodeReaderState extends State<QRCodeReader> {
       _hasDetected = false;
     });
     _controller.start();
+  }
+
+  Future<bool> _promptPassword() async {
+    String enteredPassword = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Enter Password"),
+        content: TextField(
+          controller: _passwordController,
+          obscureText: true,
+          decoration: InputDecoration(hintText: "Password"),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context, "");
+            },
+            child: Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context, _passwordController.text);
+            },
+            child: Text("OK"),
+          ),
+        ],
+      ),
+    );
+
+    // Trim entered password to remove leading/trailing white spaces
+    enteredPassword = enteredPassword.trim();
+
+    // Debugging output to verify entered password
+    print('Entered password: $enteredPassword');
+
+    // Check if the entered password matches your criteria
+    // For simplicity, let's assume the correct password is "123456"
+    bool isPasswordCorrect = enteredPassword == '102022';
+
+    if (!isPasswordCorrect) {
+      _showErrorDialog("Incorrect password");
+      // Password incorrect, reset detection
+      _resetDetection();
+    }
+
+    return isPasswordCorrect;
+  }
+
+  void _showSuccessDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Success"),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _resetDetection();
+            },
+            child: Text("OK"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showErrorDialog(String errorMessage) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Error"),
+        content: Text(errorMessage),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _resetDetection();
+            },
+            child: Text("OK"),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

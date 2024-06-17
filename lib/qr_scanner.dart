@@ -62,8 +62,6 @@ class _QRCodeReaderState extends State<QRCodeReader> {
             // Password incorrect, reset detection
             _resetDetection();
             return;
-          } else {
-            _showSuccessDialog("Password accepted");
           }
         }
         // Check mode and update the Google Sheet
@@ -126,7 +124,8 @@ class _QRCodeReaderState extends State<QRCodeReader> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text("Enter Password"),
-        content: const TextField(
+        content: TextField(
+          controller: _passwordController,
           obscureText: true,
           decoration: InputDecoration(hintText: "Password"),
         ),
@@ -147,9 +146,23 @@ class _QRCodeReaderState extends State<QRCodeReader> {
       ),
     );
 
+    // Trim entered password to remove leading/trailing white spaces
+    enteredPassword = enteredPassword.trim();
+
+    // Debugging output to verify entered password
+    print('Entered password: $enteredPassword');
+
     // Check if the entered password matches your criteria
     // For simplicity, let's assume the correct password is "123456"
-    return enteredPassword == 'ibtikar';
+    bool isPasswordCorrect = enteredPassword == '102022';
+
+    if (!isPasswordCorrect) {
+      _showErrorDialog("Incorrect password");
+      // Password incorrect, reset detection
+      _resetDetection();
+    }
+
+    return isPasswordCorrect;
   }
 
   void _showSuccessDialog(String message) {

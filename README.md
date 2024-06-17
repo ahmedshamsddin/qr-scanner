@@ -9,4 +9,4 @@ flutter app that is able to scan qr codes and update google sheets with the data
 
 3. choose device: 
     * you can choose an emulator to test the app
-    * you can also connect your phone with usb cable and enable usb debugging to run the app on your phone (i recommend this option)
+    * you can also connect your phone with usb cable and enable usb debugging to run the app on your phone (i recommend this option) 

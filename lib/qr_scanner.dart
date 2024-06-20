@@ -1,5 +1,5 @@
-import "package:flutter/material.dart";
-import "package:mobile_scanner/mobile_scanner.dart";
+import 'package:flutter/material.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qr_scanner/connecting-flutter-gsheet.dart'; // Import the correct path
 
 class QRCodeReader extends StatefulWidget {
@@ -14,7 +14,9 @@ class QRCodeReader extends StatefulWidget {
 class _QRCodeReaderState extends State<QRCodeReader> {
   late MobileScannerController _controller;
   bool _hasDetected = false;
-  TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
   @override
   void initState() {
     super.initState();
@@ -48,31 +50,58 @@ class _QRCodeReaderState extends State<QRCodeReader> {
       String rawValue = barcode.rawValue ?? "";
       List<String> parts = rawValue.split('-');
 
+      if (parts.length != 2) {
+        // Handle invalid QR code format
+        _showErrorDialog("Invalid QR Code");
+      }
+
       if (parts.length == 2) {
         String idStr = parts[0];
         int id = int.tryParse(idStr) ?? 0;
-        // String name = parts[1]; // Not used in current logic
+        String name = parts[1];
 
-        if (!widget.isRegistrationMode.value) {
-          // Prompt for password
-          bool passwordCorrect = await _promptPassword();
-
-          if (!passwordCorrect) {
-            _showErrorDialog("Incorrect password");
-            // Password incorrect, reset detection
-            _resetDetection();
-            return;
-          }
+        showDialog(
+          context: context,
+          barrierDismissible:
+              false, // Prevents closing the dialog by tapping outside
+          builder: (context) => const Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+        if (id == 0) {
+          // Handle invalid ID
+          Navigator.pop(context); // Close the loading dialog
+          _showErrorDialog("Invalid QR");
         }
+        // check values exist
+        var rowValues = await NameSheet.userSheet!.values.row(id);
+
+        if (rowValues.isEmpty || rowValues == null || rowValues[0] != name) {
+          Navigator.pop(context); // Close the loading dialog
+          _showErrorDialog("User not found");
+          return;
+        }
+
         // Check mode and update the Google Sheet
         if (widget.isRegistrationMode.value) {
           // Update "attended" column to "TRUE"
+          //check if the user is in the sheet
+
           await NameSheet.userSheet!.values.insertValue(
             'TRUE', // Value to insert
             column: 4, // Column to update
             row: id, // Row key (id)
           );
         } else {
+          // prompt for password
+          bool isPasswordCorrect = await _promptPassword();
+
+          if (!isPasswordCorrect) {
+            Navigator.pop(context); // Close the loading dialog
+            _showErrorDialog("Incorrect password");
+            return;
+          }
+
           // Fetch current points
           var currentPointsStr = await NameSheet.userSheet!.values.value(
             column: 2,
@@ -90,25 +119,27 @@ class _QRCodeReaderState extends State<QRCodeReader> {
             row: id, // Row key (id)
           );
         }
+        Navigator.pop(context); // Close the loading dialog
+
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(widget.isRegistrationMode.value
+                ? "أهلاً وسهلاً"
+                : "زيادة نقاط"),
+            content: Text(barcode.rawValue ?? "No barcode found"),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _resetDetection();
+                },
+                child: const Text("OK"),
+              ),
+            ],
+          ),
+        );
       }
-      // Handle invalid QR code format
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(
-              widget.isRegistrationMode.value ? "أهلاً وسهلاً" : "زيادة نقاط"),
-          content: Text(barcode.rawValue ?? "No barcode found"),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _resetDetection();
-              },
-              child: const Text("OK"),
-            ),
-          ],
-        ),
-      );
     }
   }
 
@@ -120,47 +151,50 @@ class _QRCodeReaderState extends State<QRCodeReader> {
   }
 
   Future<bool> _promptPassword() async {
-    String enteredPassword = await showDialog(
+    bool isPasswordCorrect = false;
+
+    await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Enter Password"),
-        content: TextField(
-          controller: _passwordController,
-          obscureText: true,
-          decoration: InputDecoration(hintText: "Password"),
+        title: const Text("Enter Password"),
+        content: Form(
+          key: _formKey,
+          child: TextFormField(
+            controller: _passwordController,
+            obscureText: true,
+            decoration: const InputDecoration(hintText: "Password"),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter your password';
+              } else if (value != '102022') {
+                // Replace with your password validation logic
+                return 'Incorrect password';
+              }
+              return null;
+            },
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context, "");
+              Navigator.pop(context, false);
+              // Return false if canceled
             },
-            child: Text("Cancel"),
+            child: const Text("Cancel"),
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context, _passwordController.text);
+              if (_formKey.currentState!.validate()) {
+                isPasswordCorrect = true;
+                Navigator.pop(
+                    context, true); // Return true if password is correct
+              }
             },
-            child: Text("OK"),
+            child: const Text("OK"),
           ),
         ],
       ),
     );
-
-    // Trim entered password to remove leading/trailing white spaces
-    enteredPassword = enteredPassword.trim();
-
-    // Debugging output to verify entered password
-    print('Entered password: $enteredPassword');
-
-    // Check if the entered password matches your criteria
-    // For simplicity, let's assume the correct password is "123456"
-    bool isPasswordCorrect = enteredPassword == '102022';
-
-    if (!isPasswordCorrect) {
-      _showErrorDialog("Incorrect password");
-      // Password incorrect, reset detection
-      _resetDetection();
-    }
 
     return isPasswordCorrect;
   }
@@ -169,7 +203,7 @@ class _QRCodeReaderState extends State<QRCodeReader> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Success"),
+        title: const Text("Success"),
         content: Text(message),
         actions: [
           TextButton(
@@ -177,7 +211,7 @@ class _QRCodeReaderState extends State<QRCodeReader> {
               Navigator.pop(context);
               _resetDetection();
             },
-            child: Text("OK"),
+            child: const Text("OK"),
           ),
         ],
       ),
@@ -188,7 +222,7 @@ class _QRCodeReaderState extends State<QRCodeReader> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Error"),
+        title: const Text("Error"),
         content: Text(errorMessage),
         actions: [
           TextButton(
@@ -196,7 +230,7 @@ class _QRCodeReaderState extends State<QRCodeReader> {
               Navigator.pop(context);
               _resetDetection();
             },
-            child: Text("OK"),
+            child: const Text("OK"),
           ),
         ],
       ),

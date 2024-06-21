@@ -123,6 +123,8 @@ class _QRCodeReaderState extends State<QRCodeReader> {
 
         showDialog(
           context: context,
+          barrierDismissible:
+              false, // Prevents closing the dialog by tapping outside
           builder: (context) => AlertDialog(
             title: Text(widget.isRegistrationMode.value
                 ? "أهلاً وسهلاً"
@@ -155,6 +157,7 @@ class _QRCodeReaderState extends State<QRCodeReader> {
 
     await showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text("Enter Password"),
         content: Form(
@@ -202,6 +205,7 @@ class _QRCodeReaderState extends State<QRCodeReader> {
   void _showSuccessDialog(String message) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text("Success"),
         content: Text(message),
@@ -221,6 +225,7 @@ class _QRCodeReaderState extends State<QRCodeReader> {
   void _showErrorDialog(String errorMessage) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: const Text("Error"),
         content: Text(errorMessage),

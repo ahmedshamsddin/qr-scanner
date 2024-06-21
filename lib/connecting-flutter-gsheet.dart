@@ -35,4 +35,21 @@ class NameSheet {
       return spreadsheet.worksheetByTitle(title)!;
     }
   }
+
+  static Future<List<List<String>>> getPoints() async {
+    return [
+      [
+        await NameSheet.userSheet!.values.value(column: 6, row: 2),
+        await NameSheet.userSheet!.values.value(column: 7, row: 2)
+      ],
+      [
+        await NameSheet.userSheet!.values.value(column: 6, row: 3),
+        await NameSheet.userSheet!.values.value(column: 7, row: 3)
+      ],
+      [
+        await NameSheet.userSheet!.values.value(column: 6, row: 4),
+        await NameSheet.userSheet!.values.value(column: 7, row: 4)
+      ],
+    ];
+  }
 }

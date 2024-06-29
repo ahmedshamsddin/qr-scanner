@@ -39,16 +39,16 @@ class NameSheet {
   static Future<List<List<String>>> getPoints() async {
     return [
       [
-        await NameSheet.userSheet!.values.value(column: 1, row: 83),
-        await NameSheet.userSheet!.values.value(column: 2, row: 83)
+        await NameSheet.userSheet!.values.value(column: 1, row: 86),
+        await NameSheet.userSheet!.values.value(column: 2, row: 86)
       ],
       [
-        await NameSheet.userSheet!.values.value(column: 1, row: 84),
-        await NameSheet.userSheet!.values.value(column: 2, row: 84)
+        await NameSheet.userSheet!.values.value(column: 1, row: 87),
+        await NameSheet.userSheet!.values.value(column: 2, row: 87)
       ],
       [
-        await NameSheet.userSheet!.values.value(column: 1, row: 85),
-        await NameSheet.userSheet!.values.value(column: 2, row: 85)
+        await NameSheet.userSheet!.values.value(column: 1, row: 88),
+        await NameSheet.userSheet!.values.value(column: 2, row: 88)
       ],
     ];
   }

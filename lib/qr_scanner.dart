@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qr_scanner/connecting-flutter-gsheet.dart'; // Import the correct path
+import 'package:http/http.dart' as http;
 
 class QRCodeReader extends StatefulWidget {
   const QRCodeReader({super.key, required this.isRegistrationMode});
@@ -59,7 +60,7 @@ class _QRCodeReaderState extends State<QRCodeReader> {
         String idStr = parts[0];
         int id = int.tryParse(idStr) ?? 0;
         String name = parts[1];
-
+        print(parts);
         showDialog(
           context: context,
           barrierDismissible:
@@ -75,8 +76,8 @@ class _QRCodeReaderState extends State<QRCodeReader> {
         }
         // check values exist
         var rowValues = await NameSheet.userSheet!.values.row(id);
-
-        if (rowValues.isEmpty || rowValues == null || rowValues[0] != name) {
+        print(rowValues);
+        if (rowValues.isEmpty || rowValues == null || rowValues[2] != name) {
           Navigator.pop(context); // Close the loading dialog
           _showErrorDialog("User not found");
           return;
@@ -89,9 +90,24 @@ class _QRCodeReaderState extends State<QRCodeReader> {
 
           await NameSheet.userSheet!.values.insertValue(
             'TRUE', // Value to insert
-            column: 4, // Column to update
+            column: 15, // Column to update
             row: id, // Row key (id)
           );
+
+          // make post request to run video
+          // const url = 'http://192.168.1.102:5000/play-gif';
+          // final response = await http.post(
+          //   Uri.parse(url),
+          //   headers: <String, String>{
+          //     'Content-Type': 'application/json',
+          //   },
+          // );
+
+          // if (response.statusCode == 200) {
+          //   print('Video is playing');
+          // } else {
+          //   print('Failed to play video');
+          // }
         } else {
           // prompt for password
           bool isPasswordCorrect = await _promptPassword();
@@ -104,7 +120,7 @@ class _QRCodeReaderState extends State<QRCodeReader> {
 
           // Fetch current points
           var currentPointsStr = await NameSheet.userSheet!.values.value(
-            column: 2,
+            column: 4,
             row: id,
           );
 
@@ -115,7 +131,7 @@ class _QRCodeReaderState extends State<QRCodeReader> {
           // Update "no of points" column
           await NameSheet.userSheet!.values.insertValue(
             newPoints.toString(), // New value for points
-            column: 2, // Column to update
+            column: 4, // Column to update
             row: id, // Row key (id)
           );
         }
@@ -241,6 +257,10 @@ class _QRCodeReaderState extends State<QRCodeReader> {
       ),
     );
   }
+
+  // Future<void> _triggerVideo ()  async {
+
+  // }
 
   @override
   Widget build(BuildContext context) {

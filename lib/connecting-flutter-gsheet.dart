@@ -18,13 +18,13 @@ class NameSheet {
 }
 
   '''; // add the creditentials here
-  static const _spreadsheetId = '1COpIK5dt-p_Emrumuj1NfJy1QFTrqnoGMR6M07HlOMk';
+  static const _spreadsheetId = '11yel6I90hVj8L7sLQY6xwAO9NsoDuNQ8Oy1ucqkUevU';
   static final _gsheet = GSheets(_credentials);
   static Worksheet? userSheet;
 
   static Future<void> init() async {
     final spreadsheet = await _gsheet.spreadsheet(_spreadsheetId);
-    userSheet = await _getWorksheet(spreadsheet, title: "Sheet1");
+    userSheet = await _getWorksheet(spreadsheet, title: "1");
   }
 
   static Future<Worksheet> _getWorksheet(Spreadsheet spreadsheet,
@@ -39,16 +39,16 @@ class NameSheet {
   static Future<List<List<String>>> getPoints() async {
     return [
       [
-        await NameSheet.userSheet!.values.value(column: 6, row: 2),
-        await NameSheet.userSheet!.values.value(column: 7, row: 2)
+        await NameSheet.userSheet!.values.value(column: 1, row: 94),
+        await NameSheet.userSheet!.values.value(column: 2, row: 94)
       ],
       [
-        await NameSheet.userSheet!.values.value(column: 6, row: 3),
-        await NameSheet.userSheet!.values.value(column: 7, row: 3)
+        await NameSheet.userSheet!.values.value(column: 1, row: 95),
+        await NameSheet.userSheet!.values.value(column: 2, row: 95)
       ],
       [
-        await NameSheet.userSheet!.values.value(column: 6, row: 4),
-        await NameSheet.userSheet!.values.value(column: 7, row: 4)
+        await NameSheet.userSheet!.values.value(column: 1, row: 96),
+        await NameSheet.userSheet!.values.value(column: 2, row: 96)
       ],
     ];
   }

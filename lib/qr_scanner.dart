@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qr_scanner/connecting-flutter-gsheet.dart'; // Import the correct path
 import 'package:http/http.dart' as http;
+import 'firebase_service.dart';
 
 class QRCodeReader extends StatefulWidget {
   const QRCodeReader({super.key, required this.isRegistrationMode});
@@ -13,6 +14,7 @@ class QRCodeReader extends StatefulWidget {
 }
 
 class _QRCodeReaderState extends State<QRCodeReader> {
+  final DatabaseService _dbService = DatabaseService();
   late MobileScannerController _controller;
   bool _hasDetected = false;
   final TextEditingController _passwordController = TextEditingController();
@@ -36,6 +38,13 @@ class _QRCodeReaderState extends State<QRCodeReader> {
     setState(() {});
   }
 
+  bool isNumeric(String s) {
+ if (s == null) {
+   return false;
+ }
+ return double.tryParse(s) != null;
+}
+
   void _onDetect(BarcodeCapture capture) async {
     if (!_hasDetected) {
       final barcode = capture.barcodes.first;
@@ -44,23 +53,19 @@ class _QRCodeReaderState extends State<QRCodeReader> {
         _hasDetected = true;
       });
 
-      await NameSheet.init(); // Initialize Google Sheets connection
+      //await NameSheet.init(); // Initialize Google Sheets connection
       _controller.stop(); // Stop scanning
 
       // Extract id and name from the scanned value
       String rawValue = barcode.rawValue ?? "";
-      List<String> parts = rawValue.split('-');
-
-      if (parts.length != 2) {
+      if (!isNumeric(rawValue)) {
         // Handle invalid QR code format
         _showErrorDialog("Invalid QR Code");
       }
 
-      if (parts.length == 2) {
-        String idStr = parts[0];
-        int id = int.tryParse(idStr) ?? 0;
-        String name = parts[1];
-        print(parts);
+      if (isNumeric(rawValue)) {
+        //String idStr = parts[0];
+        int id = int.tryParse(rawValue) ?? 0;
         showDialog(
           context: context,
           barrierDismissible:
@@ -75,24 +80,25 @@ class _QRCodeReaderState extends State<QRCodeReader> {
           _showErrorDialog("Invalid QR");
         }
         // check values exist
-        var rowValues = await NameSheet.userSheet!.values.row(id);
-        print(rowValues);
-        if (rowValues.isEmpty || rowValues == null || rowValues[2] != name) {
-          Navigator.pop(context); // Close the loading dialog
-          _showErrorDialog("User not found");
-          return;
-        }
+        //var rowValues = await NameSheet.userSheet!.values.row(id);
+        // print(rowValues);
+        // if (rowValues.isEmpty || rowValues == null || rowValues[2] != name) {
+        //   Navigator.pop(context); // Close the loading dialog
+        //   _showErrorDialog("User not found");
+        //   return;
+        // }
 
         // Check mode and update the Google Sheet
         if (widget.isRegistrationMode.value) {
+          _dbService.getCount();
           // Update "attended" column to "TRUE"
           //check if the user is in the sheet
 
-          await NameSheet.userSheet!.values.insertValue(
-            'TRUE', // Value to insert
-            column: 15, // Column to update
-            row: id, // Row key (id)
-          );
+          // await NameSheet.userSheet!.values.insertValue(
+          //   'TRUE', // Value to insert
+          //   column: 15, // Column to update
+          //   row: id, // Row key (id)
+          // );
 
           // make post request to run video
           // const url = 'http://192.168.1.102:5000/play-gif';
@@ -118,22 +124,22 @@ class _QRCodeReaderState extends State<QRCodeReader> {
             return;
           }
 
-          // Fetch current points
-          var currentPointsStr = await NameSheet.userSheet!.values.value(
-            column: 4,
-            row: id,
-          );
+          // // Fetch current points
+          // var currentPointsStr = await NameSheet.userSheet!.values.value(
+          //   column: 4,
+          //   row: id,
+          // );
 
           // Convert current points to integer and increment
-          var currentPoints = int.tryParse(currentPointsStr ?? '0') ?? 0;
-          var newPoints = currentPoints + 1;
+          // var currentPoints = int.tryParse(currentPointsStr ?? '0') ?? 0;
+          // var newPoints = currentPoints + 1;
 
-          // Update "no of points" column
-          await NameSheet.userSheet!.values.insertValue(
-            newPoints.toString(), // New value for points
-            column: 4, // Column to update
-            row: id, // Row key (id)
-          );
+          // // Update "no of points" column
+          // await NameSheet.userSheet!.values.insertValue(
+          //   newPoints.toString(), // New value for points
+          //   column: 4, // Column to update
+          //   row: id, // Row key (id)
+          // );
         }
         Navigator.pop(context); // Close the loading dialog
 
@@ -144,7 +150,7 @@ class _QRCodeReaderState extends State<QRCodeReader> {
           builder: (context) => AlertDialog(
             title: Text(widget.isRegistrationMode.value
                 ? "أهلاً وسهلاً"
-                : "زيادة نقاط"),
+                : "أكيد الدفع"),
             content: Text(barcode.rawValue ?? "No barcode found"),
             actions: [
               TextButton(

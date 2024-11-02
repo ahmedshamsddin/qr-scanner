@@ -1,14 +1,21 @@
 // Author: Ahmad Shamsddin
 
 import 'package:flutter/material.dart';
-import 'package:qr_scanner/connecting-flutter-gsheet.dart';
+//import 'package:qr_scanner/connecting-flutter-gsheet.dart';
 import 'qr_scanner.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'firebase_options.dart';
+
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await NameSheet.init();
-  var points = await NameSheet.getPoints();
+  // await NameSheet.init();
+  // var points = await NameSheet.getPoints();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const MyApp());
 }
 
@@ -61,7 +68,7 @@ class _QRCodeScreenState extends State<QRCodeScreen> {
                   const Row(
                     children: [
                       Text(
-                        'زيادة نقاط',
+                        'تأكيد الدفع',
                         style: TextStyle(
                             color: Color.fromRGBO(2, 36, 71, 1.0),
                             fontSize: 16,
@@ -112,69 +119,70 @@ class _QRCodeScreenState extends State<QRCodeScreen> {
               ),
             ],
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(0, 16, 0, 0),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                foregroundColor: const Color.fromRGBO(2, 36, 71, 1.0),
-                backgroundColor: const Color.fromRGBO(252, 181, 29, 1.0),
-              ),
-              onPressed: () async {
-                showDialog(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (context) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  },
-                );
-                // show dialog to get names
-                var points = await NameSheet.getPoints();
-                if (points != null) {
-                  Navigator.of(context).pop();
-                  showDialog(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        title: const Text('لائحة النقاط'),
-                        content: Table(
-                          border: TableBorder.all(),
-                          children: [
-                            const TableRow(
-                              children: [
-                                TableCell(child: Center(child: Text('الاسم'))),
-                                TableCell(child: Center(child: Text('النقاط'))),
-                              ],
-                            ),
-                            for (var name in points)
-                              TableRow(
-                                children: [
-                                  TableCell(
-                                      child: Center(child: Text(name[0]))),
-                                  TableCell(
-                                      child: Center(
-                                          child: Text(name[1].toString()))),
-                                ],
-                              ),
-                          ],
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                            child: const Text('Close'),
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                }
-              },
-              child: const Text('عرض النقاط'),
-            ),
-          ),
+          // no need for tac2024 version
+          // Padding(
+          //   padding: const EdgeInsets.fromLTRB(0, 16, 0, 0),
+          //   child: ElevatedButton(
+          //     style: ElevatedButton.styleFrom(
+          //       foregroundColor: const Color.fromRGBO(2, 36, 71, 1.0),
+          //       backgroundColor: const Color.fromRGBO(252, 181, 29, 1.0),
+          //     ),
+          //     onPressed: () async {
+          //       showDialog(
+          //         context: context,
+          //         barrierDismissible: false,
+          //         builder: (context) {
+          //           return const Center(
+          //             child: CircularProgressIndicator(),
+          //           );
+          //         },
+          //       );
+          //       // show dialog to get names
+          //       var points = await NameSheet.getPoints();
+          //       if (points != null) {
+          //         Navigator.of(context).pop();
+          //         showDialog(
+          //           context: context,
+          //           builder: (context) {
+          //             return AlertDialog(
+          //               title: const Text('لائحة النقاط'),
+          //               content: Table(
+          //                 border: TableBorder.all(),
+          //                 children: [
+          //                   const TableRow(
+          //                     children: [
+          //                       TableCell(child: Center(child: Text('الاسم'))),
+          //                       TableCell(child: Center(child: Text('النقاط'))),
+          //                     ],
+          //                   ),
+          //                   for (var name in points)
+          //                     TableRow(
+          //                       children: [
+          //                         TableCell(
+          //                             child: Center(child: Text(name[0]))),
+          //                         TableCell(
+          //                             child: Center(
+          //                                 child: Text(name[1].toString()))),
+          //                       ],
+          //                     ),
+          //                 ],
+          //               ),
+          //               actions: [
+          //                 TextButton(
+          //                   onPressed: () {
+          //                     Navigator.of(context).pop();
+          //                   },
+          //                   child: const Text('Close'),
+          //                 ),
+          //               ],
+          //             );
+          //           },
+          //         );
+          //       }
+          //     },
+          //     child: const Text('عرض النقاط'),
+          //   ),
+          // ),
         ],
       ),
     );

@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "525423404443",
+    "firebase_url": "https://ibtikar-attendance-system-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "ibtikar-attendance-system",
+    "storage_bucket": "ibtikar-attendance-system.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:525423404443:android:ac1df2d5d042d388dbad3e",
+        "android_client_info": {
+          "package_name": "com.example.qr_scanner"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBI9jOHJaHhpoE_DRXzlnXNFxYIvS2_jyk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

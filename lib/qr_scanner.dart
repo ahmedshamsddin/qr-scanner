@@ -58,14 +58,15 @@ class _QRCodeReaderState extends State<QRCodeReader> {
 
       // Extract id and name from the scanned value
       String rawValue = barcode.rawValue ?? "";
-      if (!isNumeric(rawValue)) {
+      List<String> parts = rawValue.split('-');
+      if (parts.length != 3) {
         // Handle invalid QR code format
         _showErrorDialog("Invalid QR Code");
       }
 
-      if (isNumeric(rawValue)) {
-        //String idStr = parts[0];
-        int id = int.tryParse(rawValue) ?? 0;
+      if (parts.length == 3) {
+        String idStr = parts[2];
+        int id = int.tryParse(idStr) ?? 0;
         showDialog(
           context: context,
           barrierDismissible:
@@ -87,10 +88,18 @@ class _QRCodeReaderState extends State<QRCodeReader> {
         //   _showErrorDialog("User not found");
         //   return;
         // }
+        Map<dynamic, dynamic>? data = await _dbService.getAttendee(idStr);
+
+          if (data == null) {
+             Navigator.pop(context); // Close the loading dialog
+            _showErrorDialog("User not found");
+            return;
+          }
 
         // Check mode and update the Google Sheet
         if (widget.isRegistrationMode.value) {
-          _dbService.getCount();
+          
+
           // Update "attended" column to "TRUE"
           //check if the user is in the sheet
 
@@ -99,7 +108,7 @@ class _QRCodeReaderState extends State<QRCodeReader> {
           //   column: 15, // Column to update
           //   row: id, // Row key (id)
           // );
-
+          await _dbService.updateAttendanceStatus(idStr);
           // make post request to run video
           // const url = 'http://192.168.1.102:5000/play-gif';
           // final response = await http.post(
@@ -115,15 +124,20 @@ class _QRCodeReaderState extends State<QRCodeReader> {
           //   print('Failed to play video');
           // }
         } else {
-          // prompt for password
-          bool isPasswordCorrect = await _promptPassword();
+          // // prompt for password
+          // bool isPasswordCorrect = await _promptPassword();
 
-          if (!isPasswordCorrect) {
+          // if (!isPasswordCorrect) {
+          //   Navigator.pop(context); // Close the loading dialog
+          //   _showErrorDialog("Incorrect password");
+          //   return;
+          // }
+          bool isUpdated = await _showFoodDetailsDialog(idStr, data);
+          if (!isUpdated) {
             Navigator.pop(context); // Close the loading dialog
-            _showErrorDialog("Incorrect password");
+           
             return;
           }
-
           // // Fetch current points
           // var currentPointsStr = await NameSheet.userSheet!.values.value(
           //   column: 4,
@@ -223,6 +237,55 @@ class _QRCodeReaderState extends State<QRCodeReader> {
 
     return isPasswordCorrect;
   }
+
+Future<bool> _showFoodDetailsDialog(String userId, Map<dynamic, dynamic> userData) async {
+  bool isUpdated = false;
+
+  await showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => AlertDialog(
+      title: const Text("Food Details"),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          userData['wants_food'] != "" ? Text("Wants Food: ${userData['wants_food']}") : Text("Wants Food: No"),
+          SizedBox(height: 10),
+          userData['payment_status'] != "" ? Text("Payment Status: ${userData['payment_status']}") : Text("Payment Status: FALSE"),
+          SizedBox(height: 10),
+          userData['payment_account'] != "" ? Text("Payment Account: ${userData['payment_account']}") : Text("Payment Account: NULL"),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context); // Close the dialog
+          },
+          child: const Text("Cancel"),
+        ),
+        TextButton(
+          onPressed: () async {
+            try {
+              // Update food_status to true
+              await _dbService.updateFoodStatus(userId);
+              isUpdated = true; // Mark as successfully updated
+              Navigator.pop(context); // Close the dialog after update
+
+            } catch (e) {
+              isUpdated = false; // Mark as update failed
+              Navigator.pop(context); // Close the dialog
+
+            }
+          },
+          child: const Text("Update Status"),
+        ),
+      ],
+    ),
+  );
+
+  return isUpdated;
+}
 
   void _showSuccessDialog(String message) {
     showDialog(
